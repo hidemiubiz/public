@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <script src="three.js"></script>
+  <script type="text/javascript">
+    window.addEventListener('DOMContentLoaded', init);
+    
+    const scene = new THREE.Scene();
+    var rectangle;
+    var renderer;
+    var camera;
+    
+    function init() {
+	const width = 600;
+	const height = 400;
+	
+	renderer = new THREE.WebGLRenderer({
+	    canvas: document.querySelector('#myCanvas')
+	});
+	renderer.setSize(width, height);
+	renderer.setPixelRatio(window.devicePixelRatio);
+	
+	camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000);
+	camera.position.set(0, 0, 5);
+	
+	rectangle = createRectangleWithTexture();
+	scene.add(rectangle);
+	
+	const light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+	light.position.set(1, 1, 1);
+	scene.add(light);
+	
+	const ambientLight = new THREE.AmbientLight(0x222222);
+	scene.add(ambientLight);
+	
+	requestAnimationFrame(render_scene);
+    }
+    
+    function render_scene()
+    {
+	// 物体回転させる(Rotate object)
+	rectangle.rotation.y += 0.01;
+	
+	renderer.render(scene, camera);
+	requestAnimationFrame(render_scene);
+    }
+    
+    function createRectangleWithTexture(){
+	// ポリゴンの頂点座標の配列（Polygon's positon array)
+	const pos = new Float32Array([
+	    -1.0, -1.0, 0.0,
+	     1.0, -1.0, 0.0,
+	     1.0,  1.0, 0.0,
+	    -1.0,  1.0, 0.0
+	]);
+	// 2つの三角形をインデックスで指定(Polygon's index array)
+	const index = new Uint32Array([
+	    0,1,2, 0,2,3
+	]);
+	
+	// ポリゴンのTexgure位置座標の配列 (Texture uv positions array)
+	var uvs = new Float32Array([
+	    0,0,  1,0,   1,1,  0,1
+	]);
+	
+	const geom = new THREE.BufferGeometry();
+	geom.setAttribute("position", new THREE.BufferAttribute(pos, 3)); // ポリゴンの頂点を指定 (Set Polygon's posistion) 
+	geom.setIndex(new THREE.BufferAttribute(index,1));                //ポリゴンの頂点の順番を指定(Set ordder of Polygon's position) 
+	geom.computeVertexNormals();                                      // ポリゴンの法線を計算 (calculate polygon's normal)
+	geom.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));       // テクスチャの位置を指定(Set texture's UV position)
+	
+	const texture = new THREE.TextureLoader().load("webgl_texture01.png");
+
+	const triMat = new THREE.MeshStandardMaterial({color:0xffffff, map: texture, side:THREE.DoubleSide});
+	const triMesh = new THREE.Mesh(geom, triMat);
+	return triMesh;
+    }
+    
+
+  </script>
+</head>
+<body>
+  <canvas id="myCanvas"></canvas>
+</body>
+</html>
