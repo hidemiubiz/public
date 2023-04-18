@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <script src="three.js"></script>
+  <script type="text/javascript">
+    window.addEventListener('DOMContentLoaded', init);
+    
+    const scene = new THREE.Scene();
+    var rectangle;
+    var renderer;
+    var camera;
+    
+    function init() {
+	const width = 600;
+	const height = 400;
+	
+	renderer = new THREE.WebGLRenderer({
+	    canvas: document.querySelector('#myCanvas')
+	});
+	renderer.setSize(width, height);
+	renderer.setPixelRatio(window.devicePixelRatio);
+	
+	camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000);
+	camera.position.set(1.5, 1.0, 1.5);
+	camera.lookAt(new THREE.Vector3(0, 0.5, 0));
+	
+	rectangle = createRectangleWithTexture(20, 1);
+	scene.add(rectangle);
+	
+	const light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+	light.position.set(1, 1, 1);
+	scene.add(light);
+	
+	const ambientLight = new THREE.AmbientLight(0x222222);
+	scene.add(ambientLight);
+	
+	requestAnimationFrame(render_scene);
+    }
+    
+    function render_scene()
+    {
+	// 物体回転させる(Rotate object)
+	rectangle.rotation.y += 0.01;
+	
+	renderer.render(scene, camera);
+	requestAnimationFrame(render_scene);
+    }
+    
+    function createRectangleWithTexture(NUM_MESH, length){
+	// ポリゴンの頂点座標の配列（Polygon's positon array)
+	var pos = new Float32Array(NUM_MESH*NUM_MESH*3);
+	var n=0;
+	for(var y=0; y<NUM_MESH; y++){ 
+	    for(var x=0; x<NUM_MESH; x++){
+		pos[n] = x * length/NUM_MESH; n++;
+		pos[n] = y * length/NUM_MESH; n++;
+		pos[n] = Math.random()*(length/NUM_MESH); n++;  // ランダム値をセット(Set random value)
+	    }
+	}
+	
+	// ポリゴンの三角形をインデックスで指定(Polugon's index array)
+	n=0;
+	var index = new Uint32Array(3*((NUM_MESH-1)*(NUM_MESH-1)*2));
+	for(var y=0; y<NUM_MESH-1; y++){ 
+	    for(var x=0; x<NUM_MESH-1; x++){
+		index[n] = y*NUM_MESH + x; n++;
+		index[n] = y*NUM_MESH + x + 1; n++;
+		index[n] = (y+1)*NUM_MESH + x + 1; n++;
+		
+		index[n] = y*NUM_MESH + x; n++;
+		index[n] = (y+1)*NUM_MESH + x + 1; n++;
+		index[n] = (y+1)*NUM_MESH + x; n++;
+	    }
+	}
+
+	// ポリゴンのTexgure位置座標の配列 (Texture uv positions array)
+	n=0;
+	var uvs = new Float32Array(NUM_MESH*NUM_MESH*2);
+	for(var y=0; y<NUM_MESH; y++){ 
+	    for(var x=0; x<NUM_MESH; x++){
+		uvs[n] = x/(NUM_MESH-1); n++;
+		uvs[n] = y/(NUM_MESH-1); n++;
+	    }
+	}
+
+	// 2つの三角形をインデックスで指定(Polygon's index array)
+	const geom = new THREE.BufferGeometry();
+	geom.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+	geom.setIndex(new THREE.BufferAttribute(index,1)); 
+	geom.computeVertexNormals();
+	geom.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+	
+	const texture = new THREE.TextureLoader().load("webgl_texture01.png");
+
+	const triMat = new THREE.MeshStandardMaterial({color:0xffffff, map: texture, side:THREE.DoubleSide});
+	const triMesh = new THREE.Mesh(geom, triMat);
+	return triMesh;
+    }
+    
+
+  </script>
+</head>
+<body>
+  <canvas id="myCanvas"></canvas>
+</body>
+</html>
